@@ -3,6 +3,7 @@ import cors from 'cors';
 import Database from 'better-sqlite3';
 import path from 'path';
 import crypto from 'crypto';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -23,7 +24,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3001;
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -562,6 +563,15 @@ app.get('/api/phish/captured', (req, res) => {
 app.get('/api/health', (req, res) => {
     res.json({ status: 'operational', timestamp: new Date().toISOString(), version: '4.0.0-AI' });
 });
+
+// ─── Serve React frontend in production ─────────────────────
+const distPath = path.join(__dirname, '..', 'dist');
+if (fs.existsSync(distPath)) {
+    app.use(express.static(distPath));
+    app.get('*', (req, res) => {
+        res.sendFile(path.join(distPath, 'index.html'));
+    });
+}
 
 app.listen(PORT, () => {
     console.log(`\n🔥 OffensiveAI Server v4.0-AI running on http://localhost:${PORT}`);
